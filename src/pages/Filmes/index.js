@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import './filmes.css'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import api from '../../services/api'
 export default function Filmes() {
   const { id } = useParams()
   const [filme, setFilme] = useState({})
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
   useEffect(() => {
     async function loadFilmes() {
@@ -22,7 +23,9 @@ export default function Filmes() {
           setLoading(false)
         })
         .catch(() => {
-          console.log('Filme não encontrado')
+          //console.log('Filme não encontrado')
+          navigate('/', { replace: true })
+          return
         })
     }
 
@@ -31,7 +34,26 @@ export default function Filmes() {
     return () => {
       console.log('Componente desmontado')
     }
-  }, [])
+  }, [id, navigate])
+
+  function salvarFilme() {
+    const minhaLista = localStorage.getItem('@primefilms')
+
+    let filmesSalvos = JSON.parse(minhaLista) || []
+
+    const hasFilme = filmesSalvos.some(
+      filmesSalvo => filmesSalvo.id === filme.id
+    )
+
+    if (hasFilme) {
+      alert('Esse filme já está na sua lista!')
+      return
+    }
+
+    filmesSalvos.push(filme)
+    localStorage.setItem('@primefilms', JSON.stringify(filmesSalvos))
+    alert('Filme salvo com sucesso!')
+  }
 
   if (loading) {
     return (
@@ -53,10 +75,11 @@ export default function Filmes() {
       <strong>Avaliação: {filme.vote_average} / 10</strong>
 
       <div className="area-buttons">
-        <button>Salvar</button>
+        <button onClick={salvarFilme}>Salvar</button>
         <button>
           <a
             target="blank"
+            rel="external"
             href={`https://youtube.com/results?search_query=${filme.title} Trailer`}
           >
             Trailer
